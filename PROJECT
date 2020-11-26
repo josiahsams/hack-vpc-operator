@@ -1,0 +1,11 @@
+domain: ibm.com
+layout: go.kubebuilder.io/v2
+projectName: joe
+repo: github.ibm.com/josiah-sams/hack-vpc-operator
+resources:
+- group: cloud
+  kind: VSI
+  version: v1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}

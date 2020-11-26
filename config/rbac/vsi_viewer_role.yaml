@@ -1,0 +1,20 @@
+# permissions for end users to view vsis.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vsi-viewer-role
+rules:
+- apiGroups:
+  - cloud.ibm.com
+  resources:
+  - vsis
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud.ibm.com
+  resources:
+  - vsis/status
+  verbs:
+  - get

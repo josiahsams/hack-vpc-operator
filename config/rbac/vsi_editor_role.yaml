@@ -1,0 +1,24 @@
+# permissions for end users to edit vsis.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vsi-editor-role
+rules:
+- apiGroups:
+  - cloud.ibm.com
+  resources:
+  - vsis
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.ibm.com
+  resources:
+  - vsis/status
+  verbs:
+  - get

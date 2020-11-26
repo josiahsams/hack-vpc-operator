@@ -1,0 +1,11 @@
+apiVersion: cloud.ibm.com/v1
+kind: VSI
+metadata:
+  name: vsi-sample
+spec:
+  # Add fields here
+    apikey : "apiv1"
+    sshkey : "sshkey1"
+    vpc : "vpc1"
+    subnet : "subnet1"
+

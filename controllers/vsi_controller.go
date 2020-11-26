@@ -55,10 +55,11 @@ func (r *VSIReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	_ = r.Log.WithValues("instances", instance)
+	r.Log.Info(instance.Spec.APIKey)
 
 	instance.Status.IPAddress = "8.8.8.8"
 
+	_ = r.Status().Update(ctx, instance)
 
 	return ctrl.Result{}, nil
 }

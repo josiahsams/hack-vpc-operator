@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	cloudv1 "github.ibm.com/josiah-sams/hack-vpc-operator/api/v1"
 )
@@ -38,8 +39,26 @@ type VSIReconciler struct {
 // +kubebuilder:rbac:groups=cloud.ibm.com,resources=vsis/status,verbs=get;update;patch
 
 func (r *VSIReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+	ctx := context.Background()
 	_ = r.Log.WithValues("vsi", req.NamespacedName)
+
+	// Fetch the Service instance
+	instance := &cloudv1.VSI{}
+	err := r.Get(ctx, req.NamespacedName, instance)
+	if err != nil {
+		if k8sErrors.IsNotFound(err) {
+			// Object not found, return.  Created objects are automatically garbage collected.
+			// For additional cleanup logic use finalizers.
+			return ctrl.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		return ctrl.Result{}, err
+	}
+
+	_ = r.Log.WithValues("instances", instance)
+
+	instance.Status.IPAddress = "8.8.8.8"
+
 
 	return ctrl.Result{}, nil
 }

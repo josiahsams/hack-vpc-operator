@@ -1,0 +1,8 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: vsi-catalog
+  namespace: olm
+spec:
+  sourceType: grpc
+  image: quay.io/josiahsams/vsi-catalog:v0.0.4

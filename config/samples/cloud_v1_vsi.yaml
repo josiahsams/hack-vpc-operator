@@ -3,7 +3,6 @@ kind: VSI
 metadata:
   name: vsi-sample
 spec:
-  # Add fields here
     apikey : "apiv1"
     sshkey : "sshkey1"
     vpc : "vpc1"

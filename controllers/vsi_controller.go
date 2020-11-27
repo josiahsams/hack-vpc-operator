@@ -48,8 +48,9 @@ const (
 
 // +kubebuilder:rbac:groups=cloud.ibm.com,resources=vsis,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=cloud.ibm.com,resources=vsis/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=cloud.ibm.com,resources=vsis/finalizers,verbs=update;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=services/finalizers,verbs=update;
+// +kubebuilder:rbac:groups=core,resources=services/finalizers,verbs=get;list;watch;create;update;patch;delete;
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=endpoints,verbs=get;list;watch;create;update;patch;delete
 

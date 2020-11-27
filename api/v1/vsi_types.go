@@ -30,11 +30,15 @@ type VSISpec struct {
 
 // VSIStatus defines the observed state of VSI
 type VSIStatus struct {
-	IPAddress string `json:"ipaddress"`
+	IPAddress string `json:"ipaddress,omitempty"`
+	State     string `json:"state,omitempty"`
+	Message   string `json:"message,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // VSI is the Schema for the vsis API
 type VSI struct {
@@ -56,4 +60,14 @@ type VSIList struct {
 
 func init() {
 	SchemeBuilder.Register(&VSI{}, &VSIList{})
+}
+
+// GetState ..
+func (s *VSI) GetState() string {
+	return s.Status.State
+}
+
+// GetMessage ..
+func (s *VSI) GetMessage() string {
+	return s.Status.Message
 }

@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -32,6 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	cloudv1 "github.ibm.com/josiah-sams/hack-vpc-operator/api/v1"
+	vsi "github.ibm.com/josiah-sams/hack-vpc-operator/controllers/vsi"
 )
 
 // VSIReconciler reconciles a VSI object
@@ -39,11 +41,13 @@ type VSIReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+	vs     *vsi.Service
 }
 
 const (
-	port       = 443
-	targetPort = 443
+	port             = 443
+	targetPort       = 443
+	serviceFinalizer = "vsi.cloud.ibm.com"
 )
 
 // +kubebuilder:rbac:groups=cloud.ibm.com,resources=vsis,verbs=get;list;watch;create;update;patch;delete
@@ -57,7 +61,7 @@ const (
 // Reconcile ..
 func (r *VSIReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
-	_ = r.Log.WithValues("vsi", req.NamespacedName)
+	logt := r.Log.WithValues("vsi", req.NamespacedName)
 
 	// Fetch the Service instance
 	instance := &cloudv1.VSI{}
@@ -74,8 +78,57 @@ func (r *VSIReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	r.Log.Info(instance.Spec.APIKey)
 
+	// Delete if necessary
+	if instance.ObjectMeta.DeletionTimestamp.IsZero() {
+		// Instance is not being deleted, add the finalizer if not present
+		if !containsServiceFinalizer(instance) {
+			instance.ObjectMeta.Finalizers = append(instance.ObjectMeta.Finalizers, serviceFinalizer)
+			if err := r.Update(ctx, instance); err != nil {
+				logt.Error(err, "Error adding finalizer", "service", instance.ObjectMeta.Name)
+				// TODO(johnstarich): Shouldn't this update the status with the failure message?
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		// The object is being deleted
+		if containsServiceFinalizer(instance) {
+
+			if r.vs != nil {
+				err = vsi.DeleteVSI(r.vs)
+				if err != nil {
+					logt.Error(err, "Error with DeleteVSI")
+				}
+			}
+
+			if err := r.deleteService(req, *instance, "vservice"); err != nil {
+				logt.Error(err, "Error deleting resource", "service", instance.ObjectMeta.Name)
+				// TODO(johnstarich): Shouldn't this return the error so it will be logged?
+				return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 10}, nil
+			}
+
+			// remove our finalizer from the list and update it.
+			instance.ObjectMeta.Finalizers = deleteServiceFinalizer(instance)
+			err = r.Update(ctx, instance)
+			if err != nil {
+				logt.Error(err, "Error removing finalizers")
+			}
+			return ctrl.Result{}, err
+		}
+	}
+
+	if r.vs == nil {
+		r.vs, err = vsi.GetOrCreate(instance.Spec.APIKey, instance.Spec.SSHKey)
+	} else {
+		err = vsi.GetOrCreateWithObj(r.vs, instance.Spec.APIKey, instance.Spec.SSHKey)
+	}
+
+	if err != nil {
+		logt.Error(err, "VSI GetOrCreate failed")
+		return ctrl.Result{}, err
+	}
+
 	// populate the IP address from the Cloud
-	ipaddress := "216.58.200.142"
+	ipaddress := r.vs.GetAddress()
 
 	if ipaddress != instance.Status.IPAddress {
 		instance.Status.IPAddress = ipaddress
@@ -92,21 +145,43 @@ func (r *VSIReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				return ctrl.Result{}, err
 			}
 		}
-
-		// Use the Cloud VSI status
-		instanceState := "provisioned"
-
-		instance.Status.State = getState(instanceState)
-		instance.Status.Message = getState(instanceState)
-
-		_ = r.Status().Update(ctx, instance)
 	}
+
+	// Use the Cloud VSI status
+	instanceState := r.vs.GetStatus()
+
+	instance.Status.State = getState(instanceState)
+	instance.Status.Message = getState(instanceState)
+
+	_ = r.Status().Update(ctx, instance)
 
 	return ctrl.Result{Requeue: true, RequeueAfter: 20 * time.Second}, nil
 }
 
+// containsServiceFinalizer checks if the instance contains service finalizer
+func containsServiceFinalizer(instance *cloudv1.VSI) bool {
+	for _, finalizer := range instance.ObjectMeta.Finalizers {
+		if strings.Contains(finalizer, serviceFinalizer) {
+			return true
+		}
+	}
+	return false
+}
+
+// deleteServiceFinalizer delete service finalizer
+func deleteServiceFinalizer(instance *cloudv1.VSI) []string {
+	var result []string
+	for _, finalizer := range instance.ObjectMeta.Finalizers {
+		if finalizer == serviceFinalizer {
+			continue
+		}
+		result = append(result, finalizer)
+	}
+	return result
+}
+
 func getState(serviceInstanceState string) string {
-	if serviceInstanceState == "succeeded" || serviceInstanceState == "active" || serviceInstanceState == "provisioned" {
+	if serviceInstanceState == "running" || serviceInstanceState == "active" || serviceInstanceState == "provisioned" {
 		return "Online"
 	}
 	return serviceInstanceState

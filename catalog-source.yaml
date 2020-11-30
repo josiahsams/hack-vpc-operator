@@ -5,4 +5,4 @@ metadata:
   namespace: olm
 spec:
   sourceType: grpc
-  image: quay.io/josiahsams/vsi-catalog:v0.0.5
+  image: quay.io/josiahsams/vsi-catalog:v0.0.6

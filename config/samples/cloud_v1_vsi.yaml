@@ -1,10 +1,10 @@
 apiVersion: cloud.ibm.com/v1
 kind: VSI
 metadata:
-  name: vsi-sample
+  name: vsi-hack1
 spec:
-    apikey : "apiv1"
-    sshkey : "sshkey1"
+    apikey : "JcCMxnugKFINoXsgTBQZEx3rFk0XKb7QYbDoIVPbCuAI"
+    sshkey : "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDO0c1DEkGxMjnE6M0Tlg4o/DfIPJTzTFSoAYuRZziGZ0mYlYPxue4yqvioAjQbAvjUK8tNd3BX+y+zeow4bDfZ8uYBwB/Ejmv8TetgMxtBydukZpDO97iobU8x4QnwkvUvk4dVsXa/c+qfCQU3QxQ3jP39HECMs4AbqdDtr5JuEYF7VTKPsc/wrhNW0eECjNd+0wuy/3TIo9Qxekj4QQJG+ZuRmPC/+8hAKAQoimnF9BRDErrdpg7PCMBgm5yrex6wLLugdlPmWbDOniNYmOnl8peuYl/gx606Ar4VewwQjbQJKTmDxitZvaPi+Tcuhdb/MZ3x7YOwz9zY3uHcPP4jYqmFsXGrSQTefOzkaTbgYM156R5dPc5nGyEyaMebvkdwl0jXKG1H+eIaFB8vAlQR7otBRLeo774+EIjWTiiU12xF1NSXO8hHyltDMyjgB/WtiQ2Y2WYJYs8oVhGxcqDpNqVvXToL2EyPHxjwsiOsO3iw4bdo6bMjvqB/djRpW4E= joe@joemac"
     vpc : "vpc1"
     subnet : "subnet1"
 
